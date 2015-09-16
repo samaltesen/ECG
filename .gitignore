@@ -7,12 +7,18 @@
 # Precompiled Headers
 *.gch
 *.pch
+#project files
+*.project
+*.cproject
 
 # Libraries
 *.lib
 *.a
 *.la
 *.lo
+
+# Ignore files in Debug directory
+Debug/
 
 # Shared objects (inc. Windows DLLs)
 *.dll
