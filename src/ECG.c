@@ -11,11 +11,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sensor.h"
-//#include "Filters.h"
+#include "Filters.h"
+#include "Detection.h"
+
 
 
 #define MAX 50
 int size;
+int currentsum = 0;
 
 // Defining the stack structure
 struct stack {
@@ -42,14 +45,10 @@ void newSignal(struct stack *st, int num) {
 
 }
 
-int sum(struct stack *st) {
-	int sum;
-	for (int i = st->top ; i >= 0; i--) {
-		//printf("Sum %i: %i",i +1, sum );
-	        sum = sum + st->arr[i] ;
-	        //printf("Sum %i: %i\n",i +1, sum );
-	  }
-	return sum;
+int sum(int a, int b) {
+	currentsum = currentsum - b + a;
+
+	return currentsum;
 }
 
 //Deleting an element from the stack.
@@ -64,7 +63,6 @@ void display(struct stack *st) {
 
 int main() {
 
-	//int n = 2500;
 
 	struct stack signal;
 	initializestack(&signal, 13);
@@ -79,10 +77,16 @@ int main() {
 	initializestack(&der, 1);
 
 	struct stack sq;
-	initializestack(&sq, 30);
+	initializestack(&sq, 12);
 
 	struct stack mwi;
-	initializestack(&mwi, 30);
+	initializestack(&mwi, 3);
+
+	struct stack peaks;
+	initializestack(&peaks, 50);
+
+	struct stack Rpeaks;
+	initializestack(&Rpeaks, 50);
 
 	int i = 0;
 	while(fileNotEmpty()) {
@@ -91,12 +95,20 @@ int main() {
 		newSignal(&hp, highpass(hp.arr[0], lp.arr[0], lp.arr[16], lp.arr[17], lp.arr[32]));
 		newSignal(&der, derivative(hp.arr[0], hp.arr[1], hp.arr[3], hp.arr[4]));
 		newSignal(&sq, squared(der.arr[0]));
-		newSignal(&mwi, mwiFilter(sum(&sq)));
+		newSignal(&mwi, mwiFilter(sum(sq.arr[0], sq.arr[11])));
 
-		printf("%i. = %i\n",i +1, mwi.arr[0]);
-		i++;
+		if(isMaximum(mwi.arr[0], mwi.arr[1], mwi.arr[2])) {
+			newSignal(&peaks, mwi.arr[1]);
+			if(isRPeak(peaks.arr[0])) {
+				newSignal(&Rpeaks, peaks.arr[0]);
+				//printf("%i. = %i\n",i +1, Rpeaks.arr[0]);
+
+				i++;
+			}
+		}
+
+
 	}
-	display(&mwi);
 
 }
 
